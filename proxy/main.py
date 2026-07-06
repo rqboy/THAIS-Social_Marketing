@@ -19,7 +19,7 @@ class Message(BaseModel):
     content: str
 
 class ClaudeRequest(BaseModel):
-    model: str = "claude-sonnet-5"
+    model: str = "claude-sonnet-4-6"
     max_tokens: int = 3000
     system: str = ""
     messages: List[Message]
