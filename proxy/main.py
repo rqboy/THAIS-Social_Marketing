@@ -23,6 +23,7 @@ class ClaudeRequest(BaseModel):
     max_tokens: int = 3000
     system: str = ""
     messages: List[Message]
+    use_web_search: bool = False
 
 class ImagenRequest(BaseModel):
     prompt: str
@@ -47,6 +48,8 @@ async def proxy_claude(req: ClaudeRequest):
     }
     if req.system:
         payload["system"] = req.system
+    if req.use_web_search:
+        payload["tools"] = [{"type": "web_search_20250305", "name": "web_search"}]
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         resp = await client.post(
@@ -111,3 +114,4 @@ async def proxy_imagen(req: ImagenRequest):
             )
 
     raise HTTPException(status_code=resp.status_code, detail=resp.text)
+
