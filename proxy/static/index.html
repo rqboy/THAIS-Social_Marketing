@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THAÏS — Studio LinkedIn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --crimson:#9B1B5A; --crimson-deep:#6E1240; --ink:#2A0E1C; --muted:#6B5A63;
+    --surface:#EEF0F2; --paper:#FFFFFF; --line:#D9DCE0; --ok:#1F7A4D;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Montserrat,Arial,sans-serif;background:var(--surface);color:var(--ink);font-size:15px;line-height:1.5}
+  button,input,textarea{font:inherit;color:inherit}
+  button{cursor:pointer}
+  :focus-visible{outline:2px solid var(--crimson);outline-offset:2px}
+
+  header{background:var(--crimson);color:#fff;display:flex;align-items:center;gap:18px;padding:14px 28px}
+  header img{height:26px}
+  header h1{font-size:1rem;font-weight:600;letter-spacing:.01em}
+  header .status{margin-left:auto;font-size:.78rem;opacity:.85;text-align:right}
+
+  .app{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 54px)}
+  @media(max-width:900px){.app{grid-template-columns:1fr}}
+
+  /* Semaine */
+  .rail{background:var(--paper);border-right:1px solid var(--line);padding:22px 18px;display:flex;flex-direction:column;gap:6px}
+  .rail h2{font-size:.95rem;font-weight:700;margin-bottom:2px}
+  .rail .week-date{font-size:.8rem;color:var(--muted);margin-bottom:14px}
+  .slot{display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:start;text-align:left;background:none;border:none;border-radius:6px;padding:10px 8px}
+  .slot:hover{background:var(--surface)}
+  .slot.on{background:#F6E8EF}
+  .slot .n{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:.78rem;font-weight:700;color:var(--muted)}
+  .slot.valide .n{background:var(--ok);border-color:var(--ok);color:#fff}
+  .slot.on .n{border-color:var(--crimson);color:var(--crimson)}
+  .slot.valide.on .n{color:#fff}
+  .slot .k{font-size:.74rem;color:var(--muted);font-weight:600}
+  .slot .t{font-size:.86rem;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .slot .t.empty{color:var(--muted);font-weight:500}
+  .rail .spacer{flex:1}
+  .btn{border:none;border-radius:6px;padding:10px 16px;font-weight:700;font-size:.86rem;background:var(--crimson);color:#fff}
+  .btn:hover{background:var(--crimson-deep)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.quiet{background:var(--paper);color:var(--crimson);border:1.5px solid var(--crimson)}
+  .btn.quiet:hover{background:#F6E8EF}
+  .btn.ok{background:var(--ok)}
+
+  /* Espace de travail */
+  main{padding:28px 36px;max-width:1240px}
+  .empty-state{max-width:520px;margin:12vh auto;text-align:center}
+  .empty-state h2{font-size:1.4rem;margin-bottom:10px}
+  .empty-state p{color:var(--muted);margin-bottom:22px}
+  .head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  .head h2{font-size:1.35rem;font-weight:800}
+  .head .cluster{font-size:.86rem;color:var(--muted);font-weight:600}
+  .steps{display:flex;gap:6px;margin:10px 0 24px;font-size:.8rem;font-weight:600;color:var(--muted)}
+  .steps span{padding:4px 10px;border-radius:20px;background:var(--paper);border:1px solid var(--line)}
+  .steps span.done{border-color:var(--ok);color:var(--ok)}
+  .steps span.now{border-color:var(--crimson);color:var(--crimson)}
+
+  .angles{display:flex;flex-direction:column;gap:10px;max-width:760px}
+  .angle{text-align:left;background:var(--paper);border:1.5px solid var(--line);border-radius:8px;padding:16px 18px}
+  .angle:hover{border-color:var(--crimson)}
+  .angle b{display:block;font-size:1rem;margin-bottom:4px}
+  .angle span{color:var(--muted);font-size:.86rem}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+
+  .studio{display:grid;grid-template-columns:minmax(320px,540px) 1fr;gap:28px;align-items:start}
+  @media(max-width:1100px){.studio{grid-template-columns:1fr}}
+  .visual{background:var(--paper);border-radius:8px;padding:14px;border:1px solid var(--line)}
+  .visual .frame{aspect-ratio:1/1;border-radius:4px;overflow:hidden;background:var(--surface)}
+  .visual .frame svg{width:100%;height:100%;display:block}
+  .tool{display:flex;gap:8px;margin-top:10px}
+  .tool input{flex:1;border:1.5px solid var(--line);border-radius:6px;padding:9px 12px;font-size:.84rem;background:var(--paper)}
+  .tool input:focus{border-color:var(--crimson);outline:none}
+  .tool .btn{padding:9px 14px}
+  .text{background:var(--paper);border-radius:8px;padding:14px;border:1px solid var(--line)}
+  .text label{font-size:.8rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px}
+  .text textarea{width:100%;min-height:340px;border:1.5px solid var(--line);border-radius:6px;padding:12px;font-size:.88rem;line-height:1.6;resize:vertical}
+  .text textarea:focus{border-color:var(--crimson);outline:none}
+  .note{font-size:.82rem;color:var(--muted);margin-top:8px}
+  .err{background:#FDECEF;border:1px solid #F3C2CF;color:#8A1538;border-radius:6px;padding:10px 12px;font-size:.84rem;margin-top:12px}
+  .busy{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.88rem;margin:16px 0}
+  .spin{width:18px;height:18px;border:2px solid var(--line);border-top-color:var(--crimson);border-radius:50%;animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
+  .validated{display:flex;align-items:center;gap:10px;color:var(--ok);font-weight:700;margin-top:16px}
+</style>
+</head>
+<body>
+<header>
+  <img id="hlogo" alt="THAÏS">
+  <h1>Studio LinkedIn</h1>
+  <div class="status" id="status">Connexion…</div>
+</header>
+<div class="app">
+  <aside class="rail">
+    <h2>Semaine</h2>
+    <div class="week-date" id="weekDate"></div>
+    <div id="slots"></div>
+    <div class="spacer"></div>
+    <button class="btn quiet" onclick="newWeek()">Préparer une nouvelle semaine</button>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<script>
+const LOGO_WHITE = "data:image/png;base64,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";
+const LOGO_CRIMSON = "data:image/png;base64,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";
+const LOGO_RATIO = 548/154;
+
+// ================================================================ référentiels
+const CLUSTERS = {
+  actualites:  { label:'Actualités', voice:"Ton fédérateur et sobre. Actualité nationale marocaine réelle (sport — ex. Lions de l'Atlas —, fête nationale, grand événement). Jamais opportuniste, relié avec justesse aux valeurs THAÏS (rigueur, esprit d'équipe, engagement)." },
+  education:   { label:'Éducation FM', voice:"Ton pédagogique et expert. Explique un concept concret du Facility Management, de la maintenance multitechnique, de la GMAO ou de la copropriété. Chiffres uniquement s'ils sont sourcés ; sinon, pas de chiffre." },
+  actifs:      { label:'Actifs THAÏS', voice:"Mise en avant d'un site géré par THAÏS, nommément. Détail concret des prestations sur ce site. Ton fier et rigoureux, jamais générique." },
+  recrutement: { label:'Recrutement', voice:"Marque employeur. Métier précis, compétences, ou culture d'entreprise vécue sur le terrain. Invite clairement à candidater." }
+};
+const TARGET_MIX = { actifs:.3, education:.3, actualites:.2, recrutement:.2 };
+const MIN_ASSET_BYTES = 25000;
+const TEMPLATE_ORDER = ['bleed','split','topcard','ribbon'];
+function pickTemplateFor(cluster){
+  if(cluster==='actifs') return Math.random()<0.7 ? 'split' : 'topcard';
+  return TEMPLATE_ORDER[Math.floor(Math.random()*TEMPLATE_ORDER.length)];
+}
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ---------- SVG TEMPLATES ----------
+function measureTextWidth(text, fontSize, weight){
+  if(!measureTextWidth._ctx){
+    measureTextWidth._ctx = document.createElement('canvas').getContext('2d');
+  }
+  const ctx = measureTextWidth._ctx;
+  ctx.font = `${weight} ${fontSize}px Montserrat, sans-serif`;
+  return ctx.measureText(text).width;
+}
+function wrapToWidth(text, fontSize, weight, maxWidth){
+  const words = String(text||'').split(/\s+/).filter(Boolean);
+  const lines = []; let cur = '';
+  for(const w of words){
+    const test = cur ? cur+' '+w : w;
+    if(cur && measureTextWidth(test, fontSize, weight) > maxWidth){ lines.push(cur); cur = w; }
+    else cur = test;
+  }
+  if(cur) lines.push(cur);
+  return lines.length ? lines : [''];
+}
+// Prend un texte (ou tableau de lignes) et le fait tenir dans maxWidth x maxLines,
+// en réduisant la taille de police si besoin, puis en tronquant en dernier recours.
+function fitTextBlock(source, {maxWidth, startSize, minSize=22, maxLines=2, weight=800, step=4}){
+  const parts = (Array.isArray(source) ? source : [source]).filter(Boolean);
+  const text = parts.join(' ').trim();
+  if(!text) return {lines:[], fontSize:startSize};
+  let size = startSize, lines;
+  do {
+    lines = wrapToWidth(text, size, weight, maxWidth);
+    if(lines.length <= maxLines || size <= minSize) break;
+    size -= step;
+  } while(true);
+  if(lines.length > maxLines){
+    lines = lines.slice(0, maxLines);
+    let last = lines[maxLines-1];
+    while(last.length > 1 && measureTextWidth(last+'…', size, weight) > maxWidth){ last = last.slice(0,-1).trimEnd(); }
+    lines[maxLines-1] = last + '…';
+  }
+  return {lines, fontSize:size};
+}
+function textBlockSvg(lines, x, startY, fontSize, opts={}){
+  const lh = fontSize * (opts.lineHeightRatio || 1.15);
+  const svg = lines.map((l,idx)=>`<text x="${x}" y="${startY+idx*lh}" ${opts.anchor?`text-anchor="${opts.anchor}"`:''} font-family="Montserrat, sans-serif" font-size="${fontSize.toFixed(1)}" font-weight="${opts.weight||800}" fill="${opts.fill||'#ffffff'}" ${opts.opacity!=null?`fill-opacity="${opts.opacity}"`:''} letter-spacing="${opts.spacing!=null?opts.spacing:'-1'}">${esc(l)}</text>`).join('');
+  return {svg, height: lines.length*lh};
+}
+function photoOrFallback(i, href, x, y, w, h){
+  if(href) return `<image x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice" href="${href}" crossorigin="anonymous"/>`;
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#bg${i})"/>`;
+}
+function defsBase(i){
+  return `<linearGradient id="bg${i}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0f0a0d"/><stop offset="100%" stop-color="#9B1B5A"/></linearGradient>`;
+}
+function logoTag(x,y,w,variant){ const h=w/LOGO_RATIO; const src = variant==='crimson'?LOGO_CRIMSON:LOGO_WHITE; return `<image x="${x}" y="${y-h/2}" width="${w}" height="${h}" href="${src}"/>`; }
+
+function tplBleed(p,i,href){
+  const x=92, maxWidth=1080-92-70;
+  const title = fitTextBlock(p.content.titre, {maxWidth, startSize:84, minSize:44, maxLines:2, weight:800});
+  const {svg:titleSvg, height:titleH} = textBlockSvg(title.lines, x, 420, title.fontSize, {weight:800, fill:'#ffffff'});
+  const subY = 420 + titleH + 26;
+  const sub = fitTextBlock(p.content.sub, {maxWidth, startSize:34, minSize:22, maxLines:2, weight:500});
+  const {svg:subSvg, height:subH} = textBlockSvg(sub.lines, x, subY, sub.fontSize, {weight:500, fill:'#ffffff', opacity:0.92});
+  const eyebrow = fitTextBlock(p.content.eyebrow, {maxWidth, startSize:27, minSize:18, maxLines:1, weight:700});
+  const {svg:eyebrowSvg} = textBlockSvg(eyebrow.lines, x, 240, eyebrow.fontSize, {weight:700, fill:'#ffffff', opacity:0.8, spacing:6});
+  // Zone assombrie derrière le bloc texte pour garantir la lisibilité quelle que soit la photo
+  const bandTop = 170, bandBottom = subY + subH + 40;
+  return `<svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>${defsBase(i)}
+    <linearGradient id="ov${i}" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#9B1B5A" stop-opacity="0.20"/>
+      <stop offset="55%" stop-color="#7a1547" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#0f0a0d" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="txtband${i}" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1a0510" stop-opacity="0.72"/>
+      <stop offset="70%" stop-color="#1a0510" stop-opacity="0.38"/>
+      <stop offset="100%" stop-color="#1a0510" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  ${photoOrFallback(i,href,0,0,1080,1080)}
+  <rect width="1080" height="1080" fill="url(#ov${i})"/>
+  <rect x="0" y="${bandTop}" width="1080" height="${bandBottom-bandTop}" fill="url(#txtband${i})"/>
+  <rect x="0" y="${bandTop}" width="10" height="${bandBottom-bandTop}" fill="#9B1B5A"/>
+  ${eyebrowSvg}
+  <rect x="92" y="270" width="100" height="4" rx="2" fill="#ffffff" fill-opacity="0.7"/>
+  ${titleSvg}${subSvg}
+  ${logoTag(92,1008,220)}
+  <text x="988" y="1000" text-anchor="end" font-family="Montserrat, sans-serif" font-size="23" font-weight="600" letter-spacing="3" fill="#ffffff" fill-opacity="0.6">${esc(p.content.tag)}</text>
+  </svg>`;
+}
+
+function tplSplit(p,i,href){
+  const panelW=470, x=70, maxWidth=panelW-70-30;
+  const title = fitTextBlock(p.content.titre, {maxWidth, startSize:58, minSize:32, maxLines:4, weight:800});
+  const {svg:titleSvg, height:titleH} = textBlockSvg(title.lines, x, 430, title.fontSize, {weight:800, fill:'#ffffff'});
+  const subY = 430 + titleH + 24;
+  const sub = fitTextBlock(p.content.sub, {maxWidth, startSize:28, minSize:19, maxLines:3, weight:500});
+  const {svg:subSvg} = textBlockSvg(sub.lines, x, subY, sub.fontSize, {weight:500, fill:'#ffffff', opacity:0.85});
+  const eyebrow = fitTextBlock(p.content.eyebrow, {maxWidth, startSize:24, minSize:16, maxLines:1, weight:700});
+  const {svg:eyebrowSvg} = textBlockSvg(eyebrow.lines, x, 200, eyebrow.fontSize, {weight:700, fill:'#ffffff', opacity:0.7, spacing:5});
+  return `<svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>${defsBase(i)}
+    <linearGradient id="pg${i}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4a0d2c"/><stop offset="100%" stop-color="#9B1B5A"/></linearGradient>
+  </defs>
+  ${photoOrFallback(i,href,panelW,0,1080-panelW,1080)}
+  <rect x="0" y="0" width="${panelW}" height="1080" fill="url(#pg${i})"/>
+  <rect x="${panelW-6}" y="0" width="6" height="1080" fill="#ffffff" fill-opacity="0.15"/>
+  ${eyebrowSvg}
+  <rect x="70" y="228" width="90" height="4" rx="2" fill="#ffffff" fill-opacity="0.6"/>
+  ${titleSvg}${subSvg}
+  <text x="70" y="900" font-family="Montserrat, sans-serif" font-size="21" font-weight="600" letter-spacing="3" fill="#ffffff" fill-opacity="0.6">${esc(p.content.tag)}</text>
+  ${logoTag(70,1000,200)}
+  </svg>`;
+}
+
+function tplTopcard(p,i,href){
+  const photoH=660, x=80, maxWidth=1080-80-90;
+  const eyebrow = fitTextBlock(p.content.eyebrow, {maxWidth:640, startSize:22, minSize:16, maxLines:1, weight:700});
+  const {svg:eyebrowSvg} = textBlockSvg(eyebrow.lines, x, photoH+78, eyebrow.fontSize, {weight:700, fill:'#ffffff', opacity:0.7, spacing:5});
+  const title = fitTextBlock(p.content.titre, {maxWidth, startSize:60, minSize:36, maxLines:2, weight:800});
+  const titleY = photoH+78+40;
+  const {svg:titleSvg, height:titleH} = textBlockSvg(title.lines, x, titleY+title.fontSize*0.85, title.fontSize, {weight:800, fill:'#ffffff'});
+  const subY = titleY + titleH + 34;
+  const sub = fitTextBlock(p.content.sub, {maxWidth, startSize:27, minSize:19, maxLines:2, weight:500});
+  const {svg:subSvg} = textBlockSvg(sub.lines, x, subY+sub.fontSize*0.85, sub.fontSize, {weight:500, fill:'#ffffff', opacity:0.82});
+  return `<svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>${defsBase(i)}
+    <linearGradient id="fade${i}" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="70%" stop-color="#000000" stop-opacity="0"/><stop offset="100%" stop-color="#000000" stop-opacity="0.35"/></linearGradient>
+  </defs>
+  ${photoOrFallback(i,href,0,0,1080,photoH)}
+  <rect x="0" y="0" width="1080" height="${photoH}" fill="url(#fade${i})"/>
+  <polygon points="0,${photoH-40} 1080,${photoH-90} 1080,${photoH} 0,${photoH}" fill="#4a0d2c"/>
+  <polygon points="1080,${photoH-90} 1080,${photoH-78} 760,${photoH-32} 760,${photoH-44}" fill="#9B1B5A"/>
+  <rect x="0" y="${photoH}" width="1080" height="${1080-photoH}" fill="#4a0d2c"/>
+  <rect x="${x}" y="${photoH+46}" width="80" height="4" rx="2" fill="#9B1B5A"/>
+  ${eyebrowSvg}
+  ${titleSvg}${subSvg}
+  <text x="1000" y="60" text-anchor="end" font-family="Montserrat, sans-serif" font-size="21" font-weight="700" letter-spacing="3" fill="#ffffff" fill-opacity="0.85">${esc(p.content.tag)}</text>
+  ${logoTag(1000-200,1016,200)}
+  <rect x="${x}" y="1004" width="46" height="4" rx="2" fill="#9B1B5A"/>
+  </svg>`;
+}
+
+function tplRibbon(p,i,href){
+  const x=86, maxWidth=1080-86-90;
+  // Le bloc titre+sous-titre est calculé d'abord ; la hauteur du bandeau blanc s'ajuste ensuite pour toujours contenir le texte.
+  const title = fitTextBlock(p.content.titre, {maxWidth, startSize:54, minSize:32, maxLines:2, weight:800});
+  const titleLH = title.fontSize*1.15, titleH = title.lines.length*titleLH;
+  const sub = fitTextBlock(p.content.sub, {maxWidth, startSize:25, minSize:18, maxLines:2, weight:500});
+  const subLH = sub.fontSize*1.15, subH = sub.lines.length*subLH;
+  const topPad=68, gap=30, footerH=88; // footer dédié au logo + tag, séparé du texte
+  const boxH = Math.max(280, Math.round(topPad + titleH + gap + subH + footerH));
+  const boxY = 1080 - boxH;
+  const titleY = boxY + topPad + title.fontSize*0.85;
+  const {svg:titleSvg} = textBlockSvg(title.lines, x, titleY, title.fontSize, {weight:800, fill:'#1a1220'});
+  const subY = titleY + (title.lines.length-1)*titleLH + gap + sub.fontSize*0.85;
+  const {svg:subSvg} = textBlockSvg(sub.lines, x, subY, sub.fontSize, {weight:500, fill:'#5a4a55'});
+  const eyebrow = fitTextBlock(p.content.eyebrow, {maxWidth:380, startSize:26, minSize:18, maxLines:1, weight:700});
+  const {svg:eyebrowSvg} = textBlockSvg(eyebrow.lines, 40, 90, eyebrow.fontSize, {weight:700, fill:'#ffffff', spacing:5});
+  const footY = 1080 - footerH/2;
+  return `<svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>${defsBase(i)}
+    <linearGradient id="tp${i}" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#000000" stop-opacity="0.55"/><stop offset="40%" stop-color="#000000" stop-opacity="0"/></linearGradient>
+  </defs>
+  ${photoOrFallback(i,href,0,0,1080,1080)}
+  <rect width="1080" height="1080" fill="url(#tp${i})"/>
+  <polygon points="0,0 460,0 340,150 0,150" fill="#9B1B5A"/>
+  ${eyebrowSvg}
+  <rect x="0" y="${boxY}" width="1080" height="${boxH}" fill="#ffffff" fill-opacity="0.96"/>
+  <rect x="86" y="${boxY-4}" width="90" height="8" fill="#9B1B5A"/>
+  ${titleSvg}${subSvg}
+  <line x1="${x}" y1="${1080-footerH}" x2="${1080-86}" y2="${1080-footerH}" stroke="#e8d5e0" stroke-width="2"/>
+  ${logoTag(x,footY,170,'crimson')}
+  <text x="994" y="${footY+7}" text-anchor="end" font-family="Montserrat, sans-serif" font-size="20" font-weight="700" letter-spacing="3" fill="#9B1B5A">${esc(p.content.tag)}</text>
+  </svg>`;
+}
+
+const TEMPLATE_FN = { bleed:tplBleed, split:tplSplit, topcard:tplTopcard, ribbon:tplRibbon };
+
+const BRAND_VOICE_EXAMPLES = `Exemples de posts THAÏS déjà publiés et validés (à utiliser comme référence de ton, structure et niveau de précision — ne jamais copier, toujours produire un contenu neuf) :
+
+[Actifs] "🏛️ Au cœur de Rabat, le siège de la CMR exige une continuité de service sans faille.\\n\\nTHAÏS assure la maintenance multitechnique de ce site institutionnel stratégique : des dizaines de milliers de m², des équipements critiques, une exigence permanente.\\n\\nNos interventions couvrent :\\n✅ Climatisation & ventilation (CVC)\\n✅ Installations électriques courant fort / faible\\n✅ Plomberie & sécurité incendie\\n✅ Suivi GMAO en temps réel\\n\\nParce que maintenir les lieux qui servent les citoyens, c'est un devoir d'excellence.\\n\\n#THAÏS #FacilityManagement #CMR #MaintenanceTechnique #Rabat"
+
+[Éducation FM] "🔧 Attendre la panne, c'est payer 3 fois le prix.\\n\\nDans la gestion de bâtiments, deux philosophies s'opposent :\\n\\n❌ Maintenance CURATIVE\\n→ Coût 3x plus élevé\\n→ Immobilisation prolongée\\n→ Impact sur les occupants\\n\\n✅ Maintenance PRÉVENTIVE (notre approche)\\n→ +40% de durée de vie des équipements\\n→ -35% de pannes imprévues\\n→ Reporting GMAO en temps réel\\n\\nAnticiper, c'est maîtriser.\\n\\n#THAÏS #MaintenancePréventive #GMAO #FacilityManagement"
+
+[Actualités] "🦁 Tout un pays derrière ses Lions.\\n\\nAu-delà du sport, c'est une fierté nationale qui rassemble. La performance, la rigueur, l'esprit d'équipe : des valeurs que nous partageons au quotidien chez THAÏS.\\n\\nBravo aux Lions de l'Atlas pour ce parcours qui inspire tout le Maroc. 🇲🇦\\n\\nParce que l'excellence, sur le terrain comme dans nos métiers, est toujours un travail collectif.\\n\\n#LionsDelAtlas #Maroc #FiertéNationale #THAÏS #Football"
+
+Constantes de style à reproduire : accroche courte avec 1 emoji en ouverture, paragraphes courts, liste à puces ✅/❌ quand pertinent, chute qui relie au métier ou aux valeurs THAÏS, 4-5 hashtags précis (#THAÏS + mots-clés du sujet). Jamais de superlatifs vides ni de ton commercial appuyé.`;
+
+// ================================================================ état
+const STORE = 'thais_studio_v1';
+let ASSETS = [], HISTORY = [], SOURCES = {patterns:'', antipatterns:'', newsDomains:[], fmDomains:[], loaded:false};
+let week = null, selected = 0, busy = {}, errors = {};
+
+function save(){
+  try{ localStorage.setItem(STORE, JSON.stringify({ week: week && {...week, slots: week.slots.map(s=>({...s, photo:null}))}, selected })); }catch(e){}
+}
+function load(){
+  try{ const s = JSON.parse(localStorage.getItem(STORE)||'null'); if(s && s.week){ week = s.week; selected = s.selected||0; } }catch(e){}
+}
+
+// ================================================================ API
+async function api(path, body){
+  const r = await fetch(path, body ? {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(body)} : {});
+  if(!r.ok){ let t = await r.text(); try{ t = JSON.parse(t).detail || t; }catch(e){} throw new Error(`${r.status} — ${String(t).slice(0,240)}`); }
+  return r.json();
+}
+async function claude(system, user, {webSearch=false, maxTokens=1800}={}){
+  const d = await api('/api/claude', { system, messages:[{role:'user', content:user}], use_web_search:webSearch, max_tokens: webSearch ? 4000 : maxTokens });
+  const texts = (d.content||[]).filter(b=>b.type==='text').map(b=>b.text);
+  for(let i=texts.length-1;i>=0;i--){ if(texts[i].includes('{')) return parseJson(texts[i]); }
+  throw new Error('Réponse de Claude sans contenu exploitable');
+}
+function parseJson(t){
+  t = t.replace(/```json|```/g,'');
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  return JSON.parse(t.slice(a, b+1));
+}
+async function imagen(prompt){
+  const d = await api('/api/imagen', { prompt, aspect_ratio:'1:1' });
+  const b64 = d.predictions?.[0]?.bytesBase64Encoded;
+  if(!b64) throw new Error("Le générateur d'images n'a renvoyé aucune image");
+  return 'data:image/png;base64,' + b64;
+}
+
+// ================================================================ sources.md
+function mdSection(md, title){
+  const re = new RegExp('^##\\s+[^\\n]*'+title+'[^\\n]*\\n([\\s\\S]*?)(?=^##\\s|$(?![\\s\\S]))','mi');
+  const m = md.match(re); return m ? m[1] : '';
+}
+function bulletLines(sec){ return sec.split('\n').map(l=>l.trim()).filter(l=>/^[-*]\s+/.test(l) && !/^[-*]\s+\*\(vide/.test(l)).join('\n'); }
+function domainsFrom(sec){
+  const out=[]; (sec.match(/https?:\/\/[^\s|)]+/g)||[]).forEach(u=>{ try{ out.push(new URL(u).hostname.replace(/^www\./,'')); }catch(e){} });
+  return [...new Set(out)];
+}
+async function loadSources(){
+  try{
+    const r = await api('/api/text/sources.md');
+    if(!r.found) return;
+    const md = r.content;
+    SOURCES = { patterns: bulletLines(mdSection(md,'PATTERNS')), antipatterns: bulletLines(mdSection(md,'ANTI-PATTERNS')),
+                newsDomains: domainsFrom(mdSection(md,'Actualité marocaine')), fmDomains: domainsFrom(mdSection(md,'Associations')), loaded:true };
+  }catch(e){}
+}
+
+// ================================================================ semaine
+function recentHistory(days){
+  const lim = Date.now() - days*86400000;
+  return HISTORY.filter(h => new Date(h.date).getTime() >= lim);
+}
+function planClusters(n=5){
+  const counts = {actifs:0, education:0, actualites:0, recrutement:0};
+  recentHistory(30).forEach(h => { if(counts[h.cluster]!=null) counts[h.cluster]++; });
+  let total = Object.values(counts).reduce((a,b)=>a+b,0);
+  const picks = [];
+  for(let i=0;i<n;i++){
+    let best=null, bestScore=-1e9;
+    for(const k of Object.keys(TARGET_MIX)){
+      let score = TARGET_MIX[k]*(total+1) - counts[k];
+      if(picks[picks.length-1]===k) score -= 0.6;   // évite deux posts identiques à la suite
+      if(score>bestScore){ bestScore=score; best=k; }
+    }
+    picks.push(best); counts[best]++; total++;
+  }
+  return picks;
+}
+function emptySlot(cluster, i){
+  return { id: Date.now()+'_'+i, cluster, status:'vide', angles:[], angle:null, assetFile:'',
+           content:null, imagenPrompt:'', photo:null, template:pickTemplateFor(cluster) };
+}
+function newWeek(){
+  if(week && week.slots.some(s=>s.status==='redige') && !confirm('Des posts rédigés ne sont pas validés. Les abandonner et préparer une nouvelle semaine ?')) return;
+  week = { createdAt: new Date().toISOString(), slots: planClusters(5).map(emptySlot) };
+  selected = 0; errors = {}; save(); render();
+  week.slots.forEach(s => proposeAngles(s.id));
+}
+function slotById(id){ return week.slots.find(s=>s.id===id); }
+
+// ================================================================ actifs
+function assetName(f){ return f.replace(/\.[a-z0-9]+$/i,'').replace(/[-_]+/g,' ').trim(); }
+function pickAsset(slot){
+  const usedRecently = new Set(recentHistory(60).map(h=>h.asset).filter(Boolean));
+  const usedThisWeek = new Set(week.slots.filter(s=>s.id!==slot.id).map(s=>s.assetFile).filter(Boolean));
+  const tiers = [
+    ASSETS.filter(a=>a.size>=MIN_ASSET_BYTES && !usedRecently.has(a.file) && !usedThisWeek.has(a.file)),
+    ASSETS.filter(a=>a.size>=MIN_ASSET_BYTES && !usedThisWeek.has(a.file)),
+    ASSETS
+  ];
+  const pool = tiers.find(t=>t.length) || [];
+  return pool.length ? pool[Math.floor(Math.random()*pool.length)].file : '';
+}
+function assetUrl(f){ const a = ASSETS.find(x=>x.file===f); return a ? a.url : ''; }
+
+// ================================================================ prompts
+function systemPrompt(){
+  let s = `Tu es le rédacteur LinkedIn de THAÏS, groupe marocain de Facility & Property Management (B2B, Casablanca ; Maroc et Afrique francophone). Ton : professionnel, concret, fier sans emphase. Tu réponds UNIQUEMENT en JSON valide, sans texte autour.\n\n${BRAND_VOICE_EXAMPLES}`;
+  if(SOURCES.patterns) s += `\n\nPatterns éditoriaux à appliquer :\n${SOURCES.patterns}`;
+  if(SOURCES.antipatterns) s += `\n\nÀ éviter absolument :\n${SOURCES.antipatterns}`;
+  return s;
+}
+function contextBlock(slot){
+  const c = CLUSTERS[slot.cluster];
+  const recent = recentHistory(90).filter(h=>h.cluster===slot.cluster).slice(-25).map(h=>`- ${h.titre}${h.angle?` (${h.angle})`:''}`).join('\n');
+  const others = week.slots.filter(s=>s.id!==slot.id && s.angle).map(s=>`- ${s.angle.angle}`).join('\n');
+  let t = `Thématique : ${c.label}\nConsigne : ${c.voice}\nDate du jour : ${new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}`;
+  if(slot.cluster==='actifs') t += `\nSite imposé (photo disponible) : ${assetName(slot.assetFile)}`;
+  if(slot.cluster==='actualites') t += `\nUtilise la recherche web pour trouver UNE actualité marocaine fédératrice récente ou imminente, avec les faits exacts (date, adversaire, lieu).${SOURCES.newsDomains.length?` Sources à privilégier : ${SOURCES.newsDomains.join(', ')}.`:''}`;
+  if(slot.cluster==='education' && SOURCES.fmDomains.length) t += `\nPour tout chiffre, vérifie-le par la recherche web, de préférence sur : ${SOURCES.fmDomains.join(', ')}.`;
+  if(recent) t += `\n\nDéjà publié sur cette thématique (ne pas refaire) :\n${recent}`;
+  if(others) t += `\n\nAutres posts prévus cette semaine (rester distinct) :\n${others}`;
+  return t;
+}
+const useSearch = slot => slot.cluster==='actualites' || (slot.cluster==='education' && SOURCES.fmDomains.length>0);
+
+// ================================================================ étapes
+async function run(id, fn){
+  busy[id] = true; errors[id] = ''; render();
+  try{ await fn(); }catch(e){ errors[id] = e.message; }
+  busy[id] = false; save(); render();
+}
+function proposeAngles(id){
+  return run(id, async ()=>{
+    const s = slotById(id);
+    if(s.cluster==='actifs'){
+      if(!ASSETS.length) throw new Error("La banque d'images est vide ou inaccessible : impossible de préparer un post Actifs.");
+      s.assetFile = pickAsset(s);
+    }
+    const j = await claude(systemPrompt(), `${contextBlock(s)}
+
+Propose 3 angles éditoriaux nettement différents pour ce post (accroche, point de vue ou format différents). Réponds :
+{"angles":[{"angle":"l'idée du post en une phrase","pitch":"pourquoi c'est intéressant pour un décideur, en une phrase"}]}`, {webSearch: useSearch(s)});
+    if(!Array.isArray(j.angles) || !j.angles.length) throw new Error('Aucun angle proposé');
+    s.angles = j.angles.slice(0,3); s.status = 'angles';
+  });
+}
+function chooseAngle(id, idx){
+  return run(id, async ()=>{
+    const s = slotById(id);
+    s.angle = s.angles[idx];
+    await writeContent(s);
+    await makeVisual(s);
+    s.status = 'redige';
+  });
+}
+async function writeContent(s){
+  const imgField = s.cluster==='actifs' ? '' : `, "imagen_prompt":"prompt en anglais pour générer la photo : scène réelle et précise au Maroc (ville, architecture, matériaux, lumière), cadrage photographique explicite, no people, no text, no logos"`;
+  const j = await claude(systemPrompt(), `${contextBlock(s)}
+
+Angle retenu : ${s.angle.angle}
+
+Rédige le post. Réponds :
+{"eyebrow":"surtitre court lié au sujet (nom du site, concept, chiffre clé) — jamais le nom de la thématique","titre":["ligne 1","ligne 2 facultative"],"sub":["une phrase d'appui"],"tag":"un ou deux mots","copy":"texte complet du post LinkedIn, paragraphes courts, 4-5 hashtags précis à la fin"${imgField}}`, {webSearch: useSearch(s)});
+  s.content = { eyebrow:j.eyebrow||'', titre:[].concat(j.titre||[]).filter(Boolean), sub:[].concat(j.sub||[]).filter(Boolean), tag:j.tag||'', copy:j.copy||'' };
+  if(j.imagen_prompt) s.imagenPrompt = j.imagen_prompt;
+}
+async function makeVisual(s){
+  if(s.cluster==='actifs') return;
+  if(!s.imagenPrompt) throw new Error('Pas de description de photo à générer');
+  s.photo = await imagen(s.imagenPrompt);
+}
+function adjustVisual(id){
+  const instr = document.getElementById('adjV').value.trim(); if(!instr) return;
+  return run(id, async ()=>{
+    const s = slotById(id);
+    if(s.cluster==='actifs'){
+      const j = await claude('Tu choisis une photo dans une banque. Réponds UNIQUEMENT en JSON : {"file":"nom de fichier EXACT de la liste"}',
+        `Photos : ${ASSETS.map(a=>a.file).join(' | ')}\nPhoto actuelle : ${s.assetFile}\nDemande : ${instr}`);
+      if(!ASSETS.some(a=>a.file===j.file)) throw new Error(`Aucune photo de la banque ne correspond à « ${j.file} »`);
+      s.assetFile = j.file;
+    } else if(/mise en page|composition|gabarit|cadrage du texte/i.test(instr)) {
+      s.template = TEMPLATE_ORDER[(TEMPLATE_ORDER.indexOf(s.template)+1) % TEMPLATE_ORDER.length];
+    } else {
+      const j = await claude('Tu révises un prompt de génération de photo selon une demande. Garde : anglais, scène réelle au Maroc, no people, no text, no logos. Réponds UNIQUEMENT en JSON : {"imagen_prompt":"..."}',
+        `Prompt actuel : ${s.imagenPrompt}\nDemande : ${instr}`);
+      s.imagenPrompt = j.imagen_prompt; s.photo = await imagen(s.imagenPrompt);
+    }
+  });
+}
+function adjustText(id){
+  const instr = document.getElementById('adjT').value.trim(); if(!instr) return;
+  return run(id, async ()=>{
+    const s = slotById(id);
+    const j = await claude(systemPrompt(), `Post actuel (JSON) : ${JSON.stringify(s.content)}\n\nDemande de modification : ${instr}\n\nRenvoie le post complet modifié, même structure JSON (eyebrow, titre, sub, tag, copy).`);
+    s.content = { eyebrow:j.eyebrow||s.content.eyebrow, titre:[].concat(j.titre||s.content.titre), sub:[].concat(j.sub||s.content.sub), tag:j.tag||s.content.tag, copy:j.copy||s.content.copy };
+  });
+}
+function nextLayout(id){ const s=slotById(id); s.template = TEMPLATE_ORDER[(TEMPLATE_ORDER.indexOf(s.template)+1)%TEMPLATE_ORDER.length]; save(); render(); }
+function regenPhoto(id){ return run(id, async ()=>{ await makeVisual(slotById(id)); }); }
+function validate(id){
+  return run(id, async ()=>{
+    const s = slotById(id);
+    await api('/api/history', { cluster:s.cluster, titre:s.content.titre.join(' '), angle:s.angle?.angle||'', asset:s.assetFile||'', copy:s.content.copy });
+    HISTORY.push({ cluster:s.cluster, titre:s.content.titre.join(' '), asset:s.assetFile, date:new Date().toISOString().slice(0,10) });
+    s.status = 'valide';
+  });
+}
+
+// ================================================================ visuels
+function slotHref(s){ return s.cluster==='actifs' ? assetUrl(s.assetFile) : s.photo; }
+function svgFor(s, href){ return TEMPLATE_FN[s.template]({ ...s, content:s.content }, s.id.replace(/\W/g,''), href ?? slotHref(s)); }
+
+let FONT_CSS = null;
+async function embeddedFontCss(){
+  if(FONT_CSS) return FONT_CSS;
+  const css = await (await fetch('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap')).text();
+  const blocks = css.split('/*').filter(b=>/^\s*latin(-ext)?\s*\*\//.test(b));
+  let out = '';
+  for(const b of blocks){
+    const face = b.slice(b.indexOf('@font-face'));
+    const url = (face.match(/url\(([^)]+)\)/)||[])[1];
+    if(!url) continue;
+    out += face.replace(url, await toDataUrl(url));
+  }
+  return FONT_CSS = out;
+}
+async function toDataUrl(url){
+  const blob = await (await fetch(url)).blob();
+  return new Promise(res=>{ const r = new FileReader(); r.onload = ()=>res(r.result); r.readAsDataURL(blob); });
+}
+async function exportPng(id){
+  const s = slotById(id);
+  try{
+    let href = slotHref(s);
+    if(href && !href.startsWith('data:')) href = await toDataUrl(href); // une image SVG n'a pas le droit de charger d'URL externe
+    let svg = svgFor(s, href);
+    const fonts = await embeddedFontCss();
+    svg = svg.replace(/<svg([^>]*)>/, `<svg$1><style>${fonts}</style>`);
+    const img = new Image();
+    await new Promise((res,rej)=>{ img.onload=res; img.onerror=()=>rej(new Error('Rendu du visuel impossible')); img.src = 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg); });
+    const cv = document.createElement('canvas'); cv.width = cv.height = 1080;
+    cv.getContext('2d').drawImage(img,0,0,1080,1080);
+    const a = document.createElement('a'); a.download = `thais_${s.cluster}_${(s.content.titre[0]||'post').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,40)}.png`;
+    a.href = cv.toDataURL('image/png'); a.click();
+  }catch(e){ errors[id] = 'Export : '+e.message; render(); }
+}
+function copyText(id, btn){
+  navigator.clipboard.writeText(slotById(id).content.copy).then(()=>{ btn.textContent='Texte copié'; setTimeout(()=>btn.textContent='Copier le texte',1800); });
+}
+
+// ================================================================ rendu
+function render(){
+  document.getElementById('weekDate').textContent = week ? 'Préparée le ' + new Date(week.createdAt).toLocaleDateString('fr-FR',{day:'numeric',month:'long'}) : '';
+  document.getElementById('slots').innerHTML = !week ? '' : week.slots.map((s,i)=>`
+    <button class="slot ${i===selected?'on':''} ${s.status==='valide'?'valide':''}" onclick="selected=${i};save();render()">
+      <span class="n">${s.status==='valide'?'✓':i+1}</span>
+      <span><span class="k">${CLUSTERS[s.cluster].label}</span><br>
+      <span class="t ${s.content?'':'empty'}">${s.content ? esc(s.content.titre.join(' ')) : busy[s.id] ? 'Préparation des angles…' : s.status==='angles' ? 'Angle à choisir' : errors[s.id] ? 'Erreur — à relancer' : 'À préparer'}</span></span>
+    </button>`).join('');
+  const m = document.getElementById('main');
+  if(!week){ m.innerHTML = `<div class="empty-state"><h2>Aucune semaine en cours</h2><p>L'outil répartit 5 posts entre les thématiques selon ce qui a déjà été publié, puis propose 3 angles pour chacun.</p><button class="btn" onclick="newWeek()">Préparer la semaine</button></div>`; return; }
+  const s = week.slots[selected];
+  const step = s.status==='valide' ? 3 : s.status==='redige' ? 2 : 1;
+  const steps = ['Angle','Rédaction','Validé'].map((l,i)=>`<span class="${i+1<step||(step===3&&i===2)?'done':i+1===step?'now':''}">${l}</span>`).join('');
+  const err = errors[s.id] ? `<div class="err">${esc(errors[s.id])}</div>` : '';
+  const spin = t => `<div class="busy"><div class="spin"></div>${t}</div>`;
+  let body = '';
+  if(s.status==='vide' || s.status==='angles' && !s.content){
+    if(busy[s.id]) body = spin(s.status==='angles' ? 'Rédaction du post et création du visuel…' : 'Recherche de 3 angles…');
+    else if(s.angles.length) body = `<div class="angles">${s.angles.map((a,i)=>`<button class="angle" onclick="chooseAngle('${s.id}',${i})"><b>${esc(a.angle)}</b><span>${esc(a.pitch)}</span></button>`).join('')}</div>
+      <div class="row"><button class="btn quiet" onclick="proposeAngles('${s.id}')">Proposer d'autres angles</button></div>`;
+    else body = `<div class="row"><button class="btn" onclick="proposeAngles('${s.id}')">Proposer 3 angles</button></div>`;
+  } else {
+    const href = slotHref(s);
+    const needPhoto = s.cluster!=='actifs' && !s.photo;
+    body = `<div class="studio">
+      <div class="visual">
+        <div class="frame">${svgFor(s)}</div>
+        ${s.status!=='valide' ? `
+        <div class="tool"><input id="adjV" placeholder="Modifier le visuel : vue de nuit, plan plus serré${s.cluster==='actifs'?', un autre site…':', ambiance chantier…'}" onkeydown="if(event.key==='Enter')adjustVisual('${s.id}')"><button class="btn" onclick="adjustVisual('${s.id}')" ${busy[s.id]?'disabled':''}>Appliquer</button></div>
+        <div class="row"><button class="btn quiet" onclick="nextLayout('${s.id}')">Autre mise en page</button>${needPhoto?`<button class="btn quiet" onclick="regenPhoto('${s.id}')">Générer la photo</button>`:''}</div>` : ''}
+        ${needPhoto && !busy[s.id] ? `<div class="note">La photo générée n'est pas conservée après fermeture de l'onglet.</div>` : ''}
+      </div>
+      <div class="text">
+        <label for="copy">Texte du post${s.angle?` — angle : ${esc(s.angle.angle)}`:''}</label>
+        <textarea id="copy" ${s.status==='valide'?'readonly':''} oninput="slotById('${s.id}').content.copy=this.value;save()">${esc(s.content.copy)}</textarea>
+        ${s.status!=='valide' ? `<div class="tool"><input id="adjT" placeholder="Modifier le texte : plus court, ton plus direct, ajoute un chiffre sourcé…" onkeydown="if(event.key==='Enter')adjustText('${s.id}')"><button class="btn" onclick="adjustText('${s.id}')" ${busy[s.id]?'disabled':''}>Appliquer</button></div>` : ''}
+        <div class="row">
+          <button class="btn quiet" onclick="copyText('${s.id}',this)">Copier le texte</button>
+          <button class="btn quiet" onclick="exportPng('${s.id}')">Télécharger le visuel</button>
+          ${s.status==='valide' ? '' : `<button class="btn ok" onclick="validate('${s.id}')" ${busy[s.id]?'disabled':''}>Valider le post</button>`}
+        </div>
+        ${s.status==='valide' ? `<div class="validated">✓ Validé et ajouté à l'historique</div>` : ''}
+        ${s.status!=='valide' ? `<div class="row"><button class="btn quiet" onclick="slotById('${s.id}').content=null;slotById('${s.id}').status='angles';save();render()">Changer d'angle</button></div>` : ''}
+      </div>
+    </div>${busy[s.id] ? spin('Mise à jour…') : ''}`;
+  }
+  m.innerHTML = `<div class="head"><h2>Post ${selected+1}</h2><span class="cluster">${CLUSTERS[s.cluster].label}${s.cluster==='actifs'&&s.assetFile?` — ${esc(assetName(s.assetFile))}`:''}</span></div>
+    <div class="steps">${steps}</div>${body}${err}`;
+}
+
+// ================================================================ démarrage
+(async ()=>{
+  document.getElementById('hlogo').src = LOGO_WHITE;
+  load(); render();
+  const st = [];
+  await document.fonts.ready;
+  const [a,h] = await Promise.allSettled([api('/api/assets'), api('/api/history'), loadSources()]);
+  if(a.status==='fulfilled') ASSETS = a.value; else st.push("banque d'images inaccessible");
+  if(h.status==='fulfilled') HISTORY = h.value; else st.push('historique inaccessible');
+  try{ const hh = await api('/health'); if(!hh.github_token) st.push('GITHUB_TOKEN absent : validation impossible'); }catch(e){}
+  document.getElementById('status').textContent = st.length ? st.join(', ')
+    : `${ASSETS.length} photos, ${HISTORY.length} posts publiés, ${SOURCES.loaded ? 'sources chargées' : 'sources.md absent'}`;
+  render();
+})();
+</script>
+</body>
+</html>
