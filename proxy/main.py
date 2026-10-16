@@ -60,12 +60,25 @@ def _raw_url(path: str) -> str:
 @app.get("/api/assets")
 async def list_assets():
     url = f"https://api.github.com/repos/{REPO}/contents/{quote(ASSET_FOLDER)}?ref={BRANCH}"
+    exts = (".jpg", ".jpeg", ".png", ".webp")
     async with httpx.AsyncClient(timeout=30) as c:
         r = await c.get(url, headers=_gh_headers())
-    if r.status_code != 200:
-        raise HTTPException(r.status_code, f"Lecture de la banque d'images impossible : {r.text[:200]}")
-    files = [f for f in r.json() if f.get("type") == "file" and f["name"].lower().endswith((".jpg", ".jpeg", ".png", ".webp"))]
-    return [{"file": f["name"], "size": f.get("size", 0), "url": _raw_url(f"{ASSET_FOLDER}/{f['name']}")} for f in files]
+        if r.status_code == 200:
+            files = [f for f in r.json() if f.get("type") == "file" and f["name"].lower().endswith(exts)]
+            return [{"file": f["name"], "size": f.get("size", 0), "url": _raw_url(f"{ASSET_FOLDER}/{f['name']}")} for f in files]
+        # Secours sans token : index public de jsDelivr (pas de limite par IP partagée)
+        j = await c.get(f"https://data.jsdelivr.com/v1/packages/gh/{REPO}@{BRANCH}?structure=flat")
+        if j.status_code == 200:
+            prefix = f"/{ASSET_FOLDER}/"
+            out = []
+            for f in j.json().get("files", []):
+                name = f.get("name", "")
+                if name.startswith(prefix) and "/" not in name[len(prefix):] and name.lower().endswith(exts):
+                    fn = name[len(prefix):]
+                    out.append({"file": fn, "size": f.get("size", 0), "url": _raw_url(f"{ASSET_FOLDER}/{fn}")})
+            if out:
+                return out
+    raise HTTPException(r.status_code, f"Lecture de la banque d'images impossible : {r.text[:200]}")
 
 
 @app.get("/api/text/{name}")
