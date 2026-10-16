@@ -164,16 +164,19 @@ async def proxy_claude(req: ClaudeRequest):
     if req.system:
         payload["system"] = req.system
     if req.use_web_search:
-        tool = {"type": "web_search_20250305", "name": "web_search", "max_uses": 4}
+        tool = {"type": "web_search_20250305", "name": "web_search", "max_uses": 3}
         if req.allowed_domains:
             tool["allowed_domains"] = req.allowed_domains
         payload["tools"] = [tool]
-    async with httpx.AsyncClient(timeout=120.0) as client:
-        resp = await client.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={"x-api-key": api_key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-            json=payload,
-        )
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(180.0, connect=15.0)) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={"x-api-key": api_key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
+                json=payload,
+            )
+    except httpx.HTTPError as e:
+        raise HTTPException(504, f"Claude n'a pas répondu à temps ({type(e).__name__}) : réessaie")
     if resp.status_code != 200:
         raise HTTPException(resp.status_code, resp.text)
     return resp.json()
@@ -192,7 +195,14 @@ async def proxy_imagen(req: ImagenRequest):
     api_key = os.environ.get("GOOGLE_API_KEY")
     if not api_key:
         raise HTTPException(500, "GOOGLE_API_KEY not set")
-    async with httpx.AsyncClient(timeout=90.0) as client:
+    try:
+        return await _imagen(req, api_key)
+    except httpx.HTTPError as e:
+        raise HTTPException(504, f"Le générateur d'images n'a pas répondu à temps ({type(e).__name__}) : réessaie")
+
+
+async def _imagen(req: ImagenRequest, api_key: str):
+    async with httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=15.0)) as client:
         resp = await client.post(
             f"https://generativelanguage.googleapis.com/v1beta/models/{req.model}:predict?key={api_key}",
             json={"instances": [{"prompt": req.prompt}], "parameters": {"sampleCount": req.sample_count, "aspectRatio": req.aspect_ratio}},

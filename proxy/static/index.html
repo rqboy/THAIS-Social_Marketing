@@ -328,8 +328,9 @@ function load(){
 }
 
 // ================================================================ API
-async function api(path, body){
+async function api(path, body, attempt=0){
   const r = await fetch(path, body ? {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(body)} : {});
+  if([502,503,504].includes(r.status) && attempt<1){ await new Promise(z=>setTimeout(z,4000)); return api(path, body, attempt+1); }
   if(!r.ok){ let t = await r.text(); try{ t = JSON.parse(t).detail || t; }catch(e){} throw new Error(`${r.status} — ${String(t).slice(0,240)}`); }
   return r.json();
 }
@@ -459,7 +460,7 @@ function proposeAngles(id){
     const j = await claude(systemPrompt(), `${contextBlock(s)}
 
 Propose 3 angles éditoriaux nettement différents pour ce post (accroche, point de vue ou format différents). Réponds :
-{"angles":[{"angle":"l'idée du post en une phrase","pitch":"pourquoi c'est intéressant pour un décideur, en une phrase"}]}`, {webSearch: useSearch(s)});
+{"angles":[{"angle":"l'idée du post en une phrase","pitch":"pourquoi c'est intéressant pour un décideur, en une phrase","faits":"faits vérifiés utiles à la rédaction (dates, chiffres, noms, avec leur source) ; vide si aucun"}]}`, {webSearch: useSearch(s)});
     if(!Array.isArray(j.angles) || !j.angles.length) throw new Error('Aucun angle proposé');
     s.angles = j.angles.slice(0,3); s.status = 'angles';
   });
@@ -477,10 +478,10 @@ async function writeContent(s){
   const imgField = s.cluster==='actifs' ? '' : `, "imagen_prompt":"prompt en anglais pour générer la photo : scène réelle et précise au Maroc (ville, architecture, matériaux, lumière), cadrage photographique explicite, no people, no text, no logos"`;
   const j = await claude(systemPrompt(), `${contextBlock(s)}
 
-Angle retenu : ${s.angle.angle}
+Angle retenu : ${s.angle.angle}${s.angle.faits ? `\nFaits vérifiés à utiliser (n'en invente aucun autre) : ${s.angle.faits}` : ''}
 
 Rédige le post. Réponds :
-{"eyebrow":"surtitre court lié au sujet (nom du site, concept, chiffre clé) — jamais le nom de la thématique","titre":["ligne 1","ligne 2 facultative"],"sub":["une phrase d'appui"],"tag":"un ou deux mots","copy":"texte complet du post LinkedIn, paragraphes courts, 4-5 hashtags précis à la fin"${imgField}}`, {webSearch: useSearch(s)});
+{"eyebrow":"surtitre court lié au sujet (nom du site, concept, chiffre clé) — jamais le nom de la thématique","titre":["ligne 1","ligne 2 facultative"],"sub":["une phrase d'appui"],"tag":"un ou deux mots","copy":"texte complet du post LinkedIn, paragraphes courts, 4-5 hashtags précis à la fin"${imgField}}`);
   s.content = { eyebrow:j.eyebrow||'', titre:[].concat(j.titre||[]).filter(Boolean), sub:[].concat(j.sub||[]).filter(Boolean), tag:j.tag||'', copy:j.copy||'' };
   if(j.imagen_prompt) s.imagenPrompt = j.imagen_prompt;
 }
