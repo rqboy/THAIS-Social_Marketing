@@ -317,7 +317,7 @@ Constantes de style à reproduire : accroche courte avec 1 emoji en ouverture, p
 
 // ================================================================ état
 const STORE = 'thais_studio_v1';
-let ASSETS = [], HISTORY = [], SOURCES = {patterns:'', antipatterns:'', newsDomains:[], fmDomains:[], loaded:false};
+let ASSETS = [], ASSETS_ERR = '', HISTORY = [], SOURCES = {patterns:'', antipatterns:'', newsDomains:[], fmDomains:[], loaded:false};
 let week = null, selected = 0, busy = {}, errors = {};
 
 function save(){
@@ -450,7 +450,7 @@ function proposeAngles(id){
   return run(id, async ()=>{
     const s = slotById(id);
     if(s.cluster==='actifs'){
-      if(!ASSETS.length) throw new Error("La banque d'images est vide ou inaccessible : impossible de préparer un post Actifs.");
+      if(!ASSETS.length) throw new Error("Banque d'images inaccessible : " + (ASSETS_ERR || 'aucune photo trouvée dans le dossier'));
       s.assetFile = pickAsset(s);
     }
     const j = await claude(systemPrompt(), `${contextBlock(s)}
@@ -623,7 +623,7 @@ function render(){
   const st = [];
   await document.fonts.ready;
   const [a,h] = await Promise.allSettled([api('/api/assets'), api('/api/history'), loadSources()]);
-  if(a.status==='fulfilled') ASSETS = a.value; else st.push("banque d'images inaccessible");
+  if(a.status==='fulfilled') ASSETS = a.value; else { ASSETS_ERR = a.reason.message; st.push("banque d'images inaccessible"); }
   if(h.status==='fulfilled') HISTORY = h.value; else st.push('historique inaccessible');
   try{ const hh = await api('/health'); if(!hh.github_token) st.push('GITHUB_TOKEN absent : validation impossible'); }catch(e){}
   document.getElementById('status').textContent = st.length ? st.join(', ')
