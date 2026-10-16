@@ -396,7 +396,8 @@ function emptySlot(cluster, i){
   return { id: Date.now()+'_'+i, cluster, status:'vide', angles:[], angle:null, assetFile:'',
            content:null, imagenPrompt:'', photo:null, template:pickTemplateFor(cluster) };
 }
-function newWeek(){
+async function newWeek(){
+  await READY;
   if(week && week.slots.some(s=>s.status==='redige') && !confirm('Des posts rédigés ne sont pas validés. Les abandonner et préparer une nouvelle semaine ?')) return;
   week = { createdAt: new Date().toISOString(), slots: planClusters(5).map(emptySlot) };
   selected = 0; errors = {}; save(); render();
@@ -448,8 +449,10 @@ async function run(id, fn){
 }
 function proposeAngles(id){
   return run(id, async ()=>{
+    await READY;
     const s = slotById(id);
     if(s.cluster==='actifs'){
+      if(!ASSETS.length) await loadAssets();
       if(!ASSETS.length) throw new Error("Banque d'images inaccessible : " + (ASSETS_ERR || 'aucune photo trouvée dans le dossier'));
       s.assetFile = pickAsset(s);
     }
@@ -617,7 +620,7 @@ function render(){
 }
 
 // ================================================================ démarrage
-(async ()=>{
+let READY = (async ()=>{
   document.getElementById('hlogo').src = LOGO_WHITE;
   load(); render();
   const st = [];
@@ -630,6 +633,7 @@ function render(){
     : `${ASSETS.length} photos, ${HISTORY.length} posts publiés, ${SOURCES.loaded ? 'sources chargées' : 'sources.md absent'}`;
   render();
 })();
+async function loadAssets(){ try{ ASSETS = await api('/api/assets'); ASSETS_ERR=''; }catch(e){ ASSETS_ERR = e.message; } }
 </script>
 </body>
 </html>
