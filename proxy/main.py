@@ -18,9 +18,13 @@ from typing import List, Optional
 from urllib.parse import quote
 
 import httpx
-from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+
+from mcp_tools import mcp
 from pydantic import BaseModel
 
 REPO = os.environ.get("GITHUB_REPO", "rqboy/THAIS-Social_Marketing")
@@ -29,7 +33,16 @@ ASSET_FOLDER = os.environ.get("ASSET_FOLDER", "Nouveau dossier")
 HISTORY_PATH = "data/historique.json"  # hors du dossier proxy/ : n'entraîne pas de redéploiement
 STATIC = Path(__file__).parent / "static"
 
-app = FastAPI(title="THAÏS Studio LinkedIn")
+@asynccontextmanager
+async def app_lifespan(_app):
+    async with mcp.session_manager.run():
+        yield
+
+
+app = FastAPI(
+    title="THAÏS Studio LinkedIn",
+    lifespan=app_lifespan,
+)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"])
 
 
