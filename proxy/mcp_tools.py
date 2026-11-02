@@ -121,3 +121,4 @@ async def generate_thais_image(
         },
         timeout=180,
     )
+)
